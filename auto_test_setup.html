@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto Test Setup - Grameen Krishi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .app-link {
+            background: #2196F3;
+        }
+        .app-link:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Grameen Krishi - Communication Test Setup</h1>
+        
+        <div class="success" id="status" style="display: none;"></div>
+        
+        <h2>📋 Test Instructions:</h2>
+        
+        <div class="step">
+            <strong>Step 1:</strong> Click "Add Test Notification" button below
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Open main app and login as Farmer
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Click notification bell 🔔 in header
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Click green communication link button
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="addTestNotification()">
+                ✅ Add Test Notification
+            </button>
+            
+            <button onclick="openMainApp()" class="app-link">
+                🚀 Open Main App
+            </button>
+            
+            <button onclick="clearNotifications()" style="background: #f44336;">
+                🗑️ Clear All Notifications
+            </button>
+        </div>
+        
+        <div id="details" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
+            <h3>📊 Notification Details:</h3>
+            <div id="notificationInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        function addTestNotification() {
+            const testNotification = {
+                id: Date.now(),
+                type: 'appointment',
+                title: 'অ্যাপয়েন্টমেন্ট অনুমোদিত (TEST)',
+                message: 'ডাঃ Rahman Ahmed আপনার অ্যাপয়েন্টমেন্ট অনুমোদন করেছেন। নির্ধারিত সময়ে ডাক্তারের সাথে যোগাযোগ করুন।',
+                time: new Date(),
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                appointmentId: 4,
+                appointmentDate: '2025-08-09',
+                appointmentTime: '14:30',
+                doctorName: 'Dr. Rahman Ahmed',
+                communicationLink: true,
+                farmerName: 'রহিম উদ্দিন (Test)',
+                avatar: '👨‍⚕️'
+            };
+
+            const existingNotifications = JSON.parse(localStorage.getItem('farmerNotifications') || '[]');
+            existingNotifications.unshift(testNotification);
+            localStorage.setItem('farmerNotifications', JSON.stringify(existingNotifications));
+            
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = `
+                <h3>✅ Test Notification Added Successfully!</h3>
+                <p>Total notifications: ${existingNotifications.length}</p>
+                <p><strong>Next:</strong> Open main app and login as Farmer to test communication link.</p>
+            `;
+            
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.style.display = 'block';
+            
+            const infoDiv = document.getElementById('notificationInfo');
+            infoDiv.innerHTML = `
+                <ul>
+                    <li><strong>ID:</strong> ${testNotification.id}</li>
+                    <li><strong>Type:</strong> ${testNotification.type}</li>
+                    <li><strong>Title:</strong> ${testNotification.title}</li>
+                    <li><strong>Appointment Date:</strong> ${testNotification.appointmentDate}</li>
+                    <li><strong>Appointment Time:</strong> ${testNotification.appointmentTime}</li>
+                    <li><strong>Doctor:</strong> ${testNotification.doctorName}</li>
+                    <li><strong>Farmer:</strong> ${testNotification.farmerName}</li>
+                    <li><strong>Communication Link:</strong> ${testNotification.communicationLink ? 'Yes' : 'No'}</li>
+                </ul>
+            `;
+            
+            console.log('✅ Test notification added:', testNotification);
+        }
+        
+        function openMainApp() {
+            window.open('http://localhost:3000', '_blank');
+        }
+        
+        function clearNotifications() {
+            localStorage.removeItem('farmerNotifications');
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#fff3cd';
+            statusDiv.style.color = '#856404';
+            statusDiv.innerHTML = '<h3>🗑️ All notifications cleared!</h3>';
+            
+            const detailsDiv = document.getElementById('details');
+            detailsDiv.style.display = 'none';
+        }
+        
+        // Auto check current notifications
+        window.onload = function() {
+            const notifications = JSON.parse(localStorage.getItem('farmerNotifications') || '[]');
+            if (notifications.length > 0) {
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.display = 'block';
+                statusDiv.style.background = '#e7f3ff';
+                statusDiv.style.color = '#004085';
+                statusDiv.innerHTML = `<h3>📋 Found ${notifications.length} existing notification(s)</h3>`;
+            }
+        };
+    </script>
+</body>
+</html>
