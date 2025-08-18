@@ -11,7 +11,7 @@ function FarmerRegistration({ language, onClose, onSwitchToLogin }) {
     password: '',
     confirmPassword: ''
   });
-
+b 
   const content = {
     bn: {
       title: 'কৃষক নিবন্ধন',
