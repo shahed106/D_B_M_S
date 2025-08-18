@@ -11,7 +11,7 @@ function FarmerRegistration({ language, onClose, onSwitchToLogin }) {
     password: '',
     confirmPassword: ''
   });
-b 
+
   const content = {
     bn: {
       title: 'কৃষক নিবন্ধন',
@@ -101,12 +101,27 @@ b
         customFarmType: formData.customFarmType || ''
       };
       localStorage.setItem('farmerProfile', JSON.stringify(profile));
+      
+      // Also create farmer account for login
+      const farmerAccounts = JSON.parse(localStorage.getItem('farmerAccounts') || '{}');
+      farmerAccounts[formData.phone] = {
+        password: formData.password,
+        name: formData.name,
+        phone: formData.phone,
+        registeredAt: new Date().toISOString()
+      };
+      localStorage.setItem('farmerAccounts', JSON.stringify(farmerAccounts));
+      
     } catch (err) {
-      console.warn('Failed saving farmerProfile to localStorage', err);
+      console.warn('Failed saving farmer data to localStorage', err);
     }
 
     // Here you would typically send the data to your backend as well
     console.log('Farmer Registration Data:', { ...formData, password: '***', confirmPassword: '***' });
+    
+    // Show success message
+    alert(language === 'bn' ? 'সফলভাবে নিবন্ধন সম্পন্ন হয়েছে!' : 'Registration completed successfully!');
+    
     // Direct registration without alert – close modal
     onClose();
   };

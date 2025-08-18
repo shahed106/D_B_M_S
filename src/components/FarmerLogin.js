@@ -44,18 +44,26 @@ function FarmerLogin({ language, onClose, onSwitchToRegister, onLoginSuccess }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically validate credentials with your backend
-    console.log('Login Data:', formData);
     
-    // Mock authentication - in real app, validate with backend
-    if (formData.phone && formData.password) {
-      // Direct login without alert
-      onClose();
-      if (onLoginSuccess) {
-        onLoginSuccess('farmer');
+    // Validate credentials with localStorage
+    try {
+      const farmerAccounts = JSON.parse(localStorage.getItem('farmerAccounts') || '{}');
+      const account = farmerAccounts[formData.phone];
+      
+      if (account && account.password === formData.password) {
+        // Login successful
+        console.log('Login successful for:', formData.phone);
+        onClose();
+        if (onLoginSuccess) {
+          onLoginSuccess('farmer', { name: account.name, phone: account.phone });
+        }
+      } else {
+        // Invalid credentials
+        alert(language === 'bn' ? 'ভুল ফোন নম্বর বা পাসওয়ার্ড!' : 'Invalid phone number or password!');
       }
-    } else {
-      alert(language === 'bn' ? 'ফোন নম্বর এবং পাসওয়ার্ড দিন!' : 'Please enter phone number and password!');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert(language === 'bn' ? 'লগইনে সমস্যা হয়েছে!' : 'Login error occurred!');
     }
   };
 
