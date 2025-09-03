@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 import './OrderConfirmation.css';
 
 const OrderConfirmation = ({ orderData, paymentData, onGoBackToDashboard }) => {
@@ -102,7 +102,7 @@ ${orderData.medicines.map(med => `${med.name} - ${med.quantity} টি - ৳${me
             {getStatusIcon()}
           </div>
           <h1>অর্ডার সম্পন্ন!</h1>
-          <p className="success-message">
+          <p className="success-messag">
             আপনার ওষুধের অর্ডার সফলভাবে সম্পন্ন হয়েছে
           </p>
         </div>
