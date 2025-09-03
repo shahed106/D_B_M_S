@@ -1,81 +1,19 @@
+// Backend API Endpoints for Farmer Registration & Login
+// This file contains the API routes that should be added to server_old.js
+
+// Add these imports at the top of server_old.js (uncomment them):
+/*
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+*/
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'grameen_krishi_secret_key';
+// Add these API routes to server_old.js:
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Database connection
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'grameen_krishi'
-};
-
-let db;
-
-// Initialize database connection
-async function initializeDatabase() {
-  try {
-    db = await mysql.createConnection(dbConfig);
-    console.log('Connected to MySQL database');
-    
-    // Create tables if they don't exist
-    await createTables();
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    process.exit(1);
-  }
-}
-
-// Create necessary tables
-async function createTables() {
-  const tables = [
-    // Users table (for both farmers and doctors)
-    `CREATE TABLE IF NOT EXISTS users (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      phone VARCHAR(20) UNIQUE NOT NULL,
-      email VARCHAR(255),
-      password_hash VARCHAR(255) NOT NULL,
-      user_type ENUM('farmer', 'doctor') NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )`,
-    
-    // Farmers table
-    `CREATE TABLE IF NOT EXISTS farmers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT NOT NULL,
-      address TEXT,
-      farm_type VARCHAR(50),
-      custom_farm_type VARCHAR(100),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )`
-  ];
-
-  for (const table of tables) {
-    try {
-      await db.execute(table);
-      console.log('Table created/verified successfully');
-    } catch (error) {
-      console.error('Error creating table:', error);
-    }
-  }
-}
-
-// API Routes
-
-// Farmer Registration
+// 1. Farmer Registration API
 app.post('/api/farmer/register', async (req, res) => {
   try {
     const { name, phone, address, farmType, customFarmType, password } = req.body;
@@ -129,12 +67,12 @@ app.post('/api/farmer/register', async (req, res) => {
     console.error('Registration error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error during registration'
     });
   }
 });
 
-// Farmer Login
+// 2. Farmer Login API
 app.post('/api/farmer/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -147,9 +85,13 @@ app.post('/api/farmer/login', async (req, res) => {
       });
     }
 
-    // Find user
+    // Find user with farmer details
     const [users] = await db.execute(
-      'SELECT u.id, u.name, u.phone, u.password_hash, f.address, f.farm_type, f.custom_farm_type FROM users u LEFT JOIN farmers f ON u.id = f.user_id WHERE u.phone = ? AND u.user_type = ?',
+      `SELECT u.id, u.name, u.phone, u.password_hash, 
+              f.address, f.farm_type, f.custom_farm_type 
+       FROM users u 
+       LEFT JOIN farmers f ON u.id = f.user_id 
+       WHERE u.phone = ? AND u.user_type = ?`,
       [phone, 'farmer']
     );
 
@@ -202,12 +144,12 @@ app.post('/api/farmer/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error during login'
     });
   }
 });
 
-// Check if user exists
+// 3. Check if farmer exists API (optional)
 app.post('/api/farmer/check', async (req, res) => {
   try {
     const { phone } = req.body;
@@ -230,13 +172,86 @@ app.post('/api/farmer/check', async (req, res) => {
   }
 });
 
-// Start server
-async function startServer() {
-  await initializeDatabase();
-  
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+// 4. Update farmer profile API
+app.put('/api/farmer/profile', async (req, res) => {
+  try {
+    const { phone, name, address, farmType, customFarmType } = req.body;
+    
+    // Validate authorization token (optional)
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.phone !== phone) {
+          return res.status(403).json({
+            success: false,
+            message: 'Unauthorized to update this profile'
+          });
+        }
+      } catch (tokenError) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token'
+        });
+      }
+    }
 
-startServer().catch(console.error);
+    // Update user name
+    await db.execute(
+      'UPDATE users SET name = ? WHERE phone = ? AND user_type = ?',
+      [name, phone, 'farmer']
+    );
+
+    // Update farmer details
+    await db.execute(
+      `UPDATE farmers f 
+       JOIN users u ON f.user_id = u.id 
+       SET f.address = ?, f.farm_type = ?, f.custom_farm_type = ? 
+       WHERE u.phone = ? AND u.user_type = ?`,
+      [address, farmType, customFarmType, phone, 'farmer']
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully'
+    });
+
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error during profile update'
+    });
+  }
+});
+
+/*
+Database Schema Required:
+
+-- Users table (for both farmers and doctors)
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  phone VARCHAR(20) UNIQUE NOT NULL,
+  email VARCHAR(255),
+  password_hash VARCHAR(255) NOT NULL,
+  user_type ENUM('farmer', 'doctor') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Farmers table
+CREATE TABLE IF NOT EXISTS farmers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  address TEXT,
+  farm_type VARCHAR(50),
+  custom_farm_type VARCHAR(100),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Indexes for better performance
+CREATE INDEX idx_users_phone ON users(phone);
+CREATE INDEX idx_users_type ON users(user_type);
+CREATE INDEX idx_farmers_user_id ON farmers(user_id);
+*/
