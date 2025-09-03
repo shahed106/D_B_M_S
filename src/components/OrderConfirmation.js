@@ -102,7 +102,7 @@ ${orderData.medicines.map(med => `${med.name} - ${med.quantity} টি - ৳${me
             {getStatusIcon()}
           </div>
           <h1>অর্ডার সম্পন্ন!</h1>
-          <p className="success-messag">
+          <p className="success-message">
             আপনার ওষুধের অর্ডার সফলভাবে সম্পন্ন হয়েছে
           </p>
         </div>
